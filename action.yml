@@ -7,3 +7,27 @@ inputs:
   version:
     description: "version"
     required: true
+  envFile:
+    description: The .env file to be parsed
+    required: false
+  prefix:
+    description: "The env prefix to matched"
+    required: false
+  output:
+    description: "Output file path"
+    required: false
+  typeDeclarationsFile:
+    description: "Output file path for the typescript declaration file"
+    required: false
+  globalKey:
+    description: "Customize the key on which the envs will be set on window object"
+    required: false
+  removePrefix:
+    description: "Remove the prefix from the env"
+    required: false
+  noEnvs:
+    description: "Only read envs from file not from environment variables"
+    required: false
+  disableLogs:
+    description: "Disable logging output"
+    required: false

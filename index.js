@@ -5,6 +5,7 @@ const {
   GO_ARCH_MAPPING,
   GO_PLATFORM_MAPPING,
 } = require("binary-cli-install");
+const exec = require("@actions/exec");
 
 async function setup() {
   // Get version of tool to be installed
@@ -23,7 +24,7 @@ async function setup() {
     false
   );
 
-  const { url } = bin.getPlatformMetadata();
+  const { url, name } = bin.getPlatformMetadata();
 
   // Download the specific version of the tool, e.g. as a tarball
   const pathToTarball = await tc.downloadTool(url);
@@ -33,6 +34,24 @@ async function setup() {
 
   // Expose the tool by adding it to the PATH
   core.addPath(pathToCLI);
+
+  const mapper = {
+    envFile: (value) => `--env-file ${value}`,
+    prefix: (value) => `--prefix ${value}`,
+    output: (value) => `--output ${value}`,
+    typeDeclarationsFile: (value) => `--type-declarations-file ${value}`,
+    globalKey: (value) => `--global-key ${value}`,
+    removePrefix: () => "--remove-prefix",
+    noEnvs: () => "--no-envs",
+    disableLogs: () => "--disable-logs",
+  };
+
+  const args = Object.entries(mapper).reduce(([key, fn]) => {
+    const value = core.getInput(key);
+    return value ? fn(value) : "";
+  });
+
+  exec.exec(name, args);
 }
 
 setup();
