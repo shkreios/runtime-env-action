@@ -1,5 +1,9 @@
 name: "runtime-env"
 description: "runtime envs for SPAs"
+author: Simon Hessel
+branding:
+  icon: bar-chart-2
+  color: gray-dark
 runs:
   using: "node12"
   main: "dist/index.js"
