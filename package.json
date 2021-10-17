@@ -1,0 +1,31 @@
+{
+  "name": "runtime-env-action",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "ncc build index.js --license LICENCE"
+  },
+  "author": "Simon Hessel",
+  "license": "MIT",
+  "keywords": [
+    "github",
+    "action"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shkreios/runtime-env-action.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shkreios/runtime-env-action/issues"
+  },
+  "homepage": "https://github.com/shkreios/runtime-env-action#readme",
+  "dependencies": {
+    "@actions/core": "^1.6.0",
+    "@actions/tool-cache": "^1.7.1",
+    "binary-cli-install": "^1.0.0"
+  },
+  "devDependencies": {
+    "@vercel/ncc": "^0.31.1"
+  }
+}
