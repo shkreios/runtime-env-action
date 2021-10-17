@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "ncc build index.js --license LICENCE"
+    "build": "ncc build index.js --license LICENCE --target ES2019"
   },
   "author": "Simon Hessel",
   "license": "MIT",
