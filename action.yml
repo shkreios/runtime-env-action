@@ -1,0 +1,5 @@
+name: "runtime-env"
+description: "runtime envs for SPAs"
+runs:
+  using: "node12"
+  main: "dist/index.js"
