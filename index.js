@@ -42,9 +42,11 @@ async function setup() {
       output: (value) => `--output ${value}`,
       typeDeclarationsFile: (value) => `--type-declarations-file ${value}`,
       globalKey: (value) => `--global-key ${value}`,
-      removePrefix: (value) => "--remove-prefix",
-      noEnvs: (value) => "--no-envs",
-      disableLogs: (value) => "--disable-logs",
+      removePrefix: (value) =>
+        value.toLowerCase() === "true" ? "--remove-prefix" : "",
+      noEnvs: (value) => (value.toLowerCase() === "true" ? "--no-envs" : ""),
+      disableLogs: (value) =>
+        value.toLowerCase() === "true" ? "--disable-logs" : "",
     };
 
     const args = Object.entries(mapper).map(([key, fn]) => {
