@@ -1,10 +1,10 @@
 {
   "name": "runtime-env-action",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "ncc build index.js --license LICENCE --target ES2019"
+    "build": "ncc build index.js --license LICENCE --target es2019"
   },
   "author": "Simon Hessel",
   "license": "MIT",
