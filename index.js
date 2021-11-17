@@ -37,11 +37,11 @@ async function setup() {
     core.addPath(pathToCLI);
 
     const mapper = {
-      envFile: (value) => `--env-file ${value}`,
-      prefix: (value) => `--prefix ${value}`,
-      output: (value) => `--output ${value}`,
-      typeDeclarationsFile: (value) => `--type-declarations-file ${value}`,
-      globalKey: (value) => `--global-key ${value}`,
+      envFile: (value) => `-f ${value}`,
+      prefix: (value) => `-p ${value}`,
+      output: (value) => `-o ${value}`,
+      typeDeclarationsFile: (value) => `--dts ${value}`,
+      globalKey: (value) => `--key ${value}`,
       removePrefix: (value) =>
         value.toLowerCase() === "true" ? "--remove-prefix" : "",
       noEnvs: (value) => (value.toLowerCase() === "true" ? "--no-envs" : ""),
