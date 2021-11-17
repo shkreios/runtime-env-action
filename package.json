@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "ncc build index.js --license LICENCE --target es2019"
+    "build": "ncc build index.ts --license LICENCE --target es2019"
   },
   "author": "Simon Hessel",
   "license": "MIT",
@@ -27,6 +27,7 @@
     "binary-cli-install": "^1.0.0"
   },
   "devDependencies": {
-    "@vercel/ncc": "^0.31.1"
+    "@vercel/ncc": "^0.31.1",
+    "typescript": "^4.4.4"
   }
 }

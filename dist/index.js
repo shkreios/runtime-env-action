@@ -1125,6 +1125,7 @@ class ToolRunner extends events.EventEmitter {
                     return reject(new Error(`The cwd: ${this.options.cwd} does not exist!`));
                 }
                 const fileName = this._getSpawnFileName();
+                console.log(this._getSpawnArgs(optionsNonNull))
                 const cp = child.spawn(fileName, this._getSpawnArgs(optionsNonNull), this._getSpawnOptions(this.options, fileName));
                 let stdbuffer = '';
                 if (cp.stdout) {
@@ -3517,7 +3518,7 @@ class Binary {
     this.debug("Download complete.");
     this.debug("Unpacking archive");
     const result = await new Promise((resolve2, reject) => {
-      if (res == null ? void 0 : res.body)
+      if (res?.body)
         res.body.pipe(gunzip__default["default"]()).pipe(tar.extract({ cwd: installDirectory }, [name])).on("end", resolve2).on("error", reject);
       else
         reject("Download was empty");
@@ -3526,7 +3527,6 @@ class Binary {
     return result;
   }
   async run() {
-    var _a;
     try {
       const { name, url } = this.getPlatformMetadata();
       const [, binLocation, ...args] = process.argv;
@@ -3539,7 +3539,7 @@ class Binary {
       const result = child_process.spawnSync(path.resolve(binFolder, name), args, options);
       if (result.error)
         throw result.error;
-      process.exit((_a = result == null ? void 0 : result.status) != null ? _a : 1);
+      process.exit(result?.status ?? 1);
     } catch (error) {
       const err = error instanceof Error ? error : new Error(`${error}`);
       console.error(err.message);
@@ -16308,71 +16308,57 @@ module.exports = require("zlib");
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
 (() => {
-const core = __nccwpck_require__(2186);
-const tc = __nccwpck_require__(7784);
-const {
-  Binary,
-  GO_ARCH_MAPPING,
-  GO_PLATFORM_MAPPING,
-} = __nccwpck_require__(5520);
-const exec = __nccwpck_require__(1514);
+"use strict";
+var exports = __webpack_exports__;
 
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const core_1 = __nccwpck_require__(2186);
+const tool_cache_1 = __nccwpck_require__(7784);
+const binary_cli_install_1 = __nccwpck_require__(5520);
+const exec_1 = __nccwpck_require__(1514);
 async function setup() {
-  try {
     // Get version of tool to be installed
-    const version = core.getInput("version");
-
-    const bin = new Binary(
-      {
+    const version = (0, core_1.getInput)("version");
+    const bin = new binary_cli_install_1.Binary({
         binary: {
-          name: "runtime-env",
-          url: "https://github.com/shkreios/runtime-env/releases/download/v{{version}}/runtime-env_{{version}}_{{platform}}_{{arch}}.tar.gz",
+            name: "runtime-env",
+            url: "https://github.com/shkreios/runtime-env/releases/download/v{{version}}/runtime-env_{{version}}_{{platform}}_{{arch}}.tar.gz",
         },
         version,
-      },
-      GO_ARCH_MAPPING,
-      GO_PLATFORM_MAPPING,
-      false
-    );
-
+    }, binary_cli_install_1.GO_ARCH_MAPPING, binary_cli_install_1.GO_PLATFORM_MAPPING, false);
     const { url, name } = bin.getPlatformMetadata();
-
     // Download the specific version of the tool, e.g. as a tarball
-    const pathToTarball = await tc.downloadTool(url);
-
+    const pathToTarball = await (0, tool_cache_1.downloadTool)(url);
     // Extract the tarball onto the runner
-    const pathToCLI = await tc.extractTar(pathToTarball);
-
+    const pathToCLI = await (0, tool_cache_1.extractTar)(pathToTarball);
     // Expose the tool by adding it to the PATH
-    core.addPath(pathToCLI);
-
+    (0, core_1.addPath)(pathToCLI);
     const mapper = {
-      envFile: (value) => `--env-file ${value}`,
-      prefix: (value) => `--prefix ${value}`,
-      output: (value) => `--output ${value}`,
-      typeDeclarationsFile: (value) => `--type-declarations-file ${value}`,
-      globalKey: (value) => `--global-key ${value}`,
-      removePrefix: (value) =>
-        value.toLowerCase() === "true" ? "--remove-prefix" : "",
-      noEnvs: (value) => (value.toLowerCase() === "true" ? "--no-envs" : ""),
-      disableLogs: (value) =>
-        value.toLowerCase() === "true" ? "--disable-logs" : "",
+        envFile: (value) => `-f ${value}`,
+        prefix: (value) => `-p ${value}`,
+        output: (value) => `-o ${value}`,
+        typeDeclarationsFile: (value) => `--dts ${value}`,
+        globalKey: (value) => `--key ${value}`,
+        removePrefix: (value) => value.toLowerCase() === "true" ? "--remove-prefix" : "",
+        noEnvs: (value) => (value.toLowerCase() === "true" ? "--no-envs" : ""),
+        disableLogs: (value) => value.toLowerCase() === "true" ? "--disable-logs" : "",
     };
-
     const args = Object.entries(mapper).map(([key, fn]) => {
-      const value = core.getInput(key);
-      return value ? fn(value) : "";
+        const value = (0, core_1.getInput)(key);
+        return value ? fn(value) : "";
     });
-
-    exec.exec(name, args);
-  } catch (error) {
-    core.setFailed(error.message);
-  }
+    (0, core_1.debug)(args.toString());
+    (0, exec_1.exec)(name, args);
 }
-
-setup();
+try {
+    setup();
+}
+catch (error) {
+    (0, core_1.debug)(`${error}`);
+    (0, core_1.setFailed)(error instanceof Error ? error.message : new Error(`${error}`));
+}
 
 })();
 
