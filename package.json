@@ -2,9 +2,10 @@
   "name": "runtime-env-action",
   "version": "1.1.2",
   "description": "",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
-    "build": "ncc build index.ts --license LICENCE --target es2019",
+    "build": "tsc && npm run package",
+    "package": "ncc build -m",
     "prepare": "husky install"
   },
   "author": "Simon Hessel",
@@ -25,9 +26,10 @@
     "@actions/core": "^1.6.0",
     "@actions/exec": "^1.1.0",
     "@actions/tool-cache": "^1.7.1",
-    "binary-cli-install": "^1.0.0"
+    "binary-cli-install": "^1.0.2"
   },
   "devDependencies": {
+    "@types/node": "^16.11.7",
     "@vercel/ncc": "^0.31.1",
     "husky": "^7.0.4",
     "typescript": "^4.4.4"
