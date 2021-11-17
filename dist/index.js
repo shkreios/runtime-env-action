@@ -16336,19 +16336,24 @@ async function setup() {
     // Expose the tool by adding it to the PATH
     (0, core_1.addPath)(pathToCLI);
     const mapper = {
-        envFile: (value) => `-f ${value}`,
-        prefix: (value) => `-p ${value}`,
-        output: (value) => `-o ${value}`,
-        typeDeclarationsFile: (value) => `--dts ${value}`,
-        globalKey: (value) => `--key ${value}`,
-        removePrefix: (value) => value.toLowerCase() === "true" ? "--remove-prefix" : "",
-        noEnvs: (value) => (value.toLowerCase() === "true" ? "--no-envs" : ""),
-        disableLogs: (value) => value.toLowerCase() === "true" ? "--disable-logs" : "",
+        envFile: (value) => `-f=${value}`,
+        prefix: (value) => `-p=${value}`,
+        output: (value) => `-o=${value}`,
+        typeDeclarationsFile: (value) => `--dts=${value}`,
+        globalKey: (value) => `--key=${value}`,
+        removePrefix: (value) => value.toLowerCase() === "true" ? "--remove-prefix=true" : "",
+        noEnvs: (value) => (value.toLowerCase() === "true" ? "--no-envs=true" : ""),
+        disableLogs: (value) => value.toLowerCase() === "true" ? "--disable-logs=true" : "",
     };
-    const args = Object.entries(mapper).map(([key, fn]) => {
+    const args = Object.entries(mapper).reduce((acc, [key, fn]) => {
         const value = (0, core_1.getInput)(key);
-        return value ? fn(value) : "";
-    });
+        if (value) {
+            const flag = fn(value);
+            if (flag)
+                acc.push(flag);
+        }
+        return acc;
+    }, new Array());
     (0, core_1.debug)(args.toString());
     (0, exec_1.exec)(name, args);
 }

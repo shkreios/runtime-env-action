@@ -36,22 +36,26 @@ async function setup() {
   addPath(pathToCLI);
 
   const mapper: Record<string, (value: string) => string> = {
-    envFile: (value) => `-f ${value}`,
-    prefix: (value) => `-p ${value}`,
-    output: (value) => `-o ${value}`,
-    typeDeclarationsFile: (value) => `--dts ${value}`,
-    globalKey: (value) => `--key ${value}`,
+    envFile: (value) => `-f=${value}`,
+    prefix: (value) => `-p=${value}`,
+    output: (value) => `-o=${value}`,
+    typeDeclarationsFile: (value) => `--dts=${value}`,
+    globalKey: (value) => `--key=${value}`,
     removePrefix: (value) =>
-      value.toLowerCase() === "true" ? "--remove-prefix" : "",
-    noEnvs: (value) => (value.toLowerCase() === "true" ? "--no-envs" : ""),
+      value.toLowerCase() === "true" ? "--remove-prefix=true" : "",
+    noEnvs: (value) => (value.toLowerCase() === "true" ? "--no-envs=true" : ""),
     disableLogs: (value) =>
-      value.toLowerCase() === "true" ? "--disable-logs" : "",
+      value.toLowerCase() === "true" ? "--disable-logs=true" : "",
   };
 
-  const args = Object.entries(mapper).map(([key, fn]) => {
+  const args = Object.entries(mapper).reduce((acc, [key, fn]) => {
     const value = getInput(key);
-    return value ? fn(value) : "";
-  });
+    if (value) {
+      const flag = fn(value);
+      if (flag) acc.push(flag);
+    }
+    return acc;
+  }, new Array<string>());
 
   debug(args.toString());
 
