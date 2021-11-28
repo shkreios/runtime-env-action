@@ -12,7 +12,7 @@ jest.mock("@actions/exec", () => ({
 }));
 
 jest.mock("@actions/tool-cache", () => ({
-  cacheFile: jest.fn(() => ""),
+  cacheDir: jest.fn(() => ""),
   downloadTool: jest.fn(() => ""),
   extractTar: jest.fn(() => ""),
   find: jest.fn(() => ""),
@@ -64,7 +64,7 @@ describe("run runtime-env", () => {
       createMockedgetInput({ version: "v1.2.0" })
     );
 
-    (<jest.Mock>mockedCache.cacheFile).mockImplementation(() => "path");
+    (<jest.Mock>mockedCache.cacheDir).mockImplementation(() => "path");
 
     await setup();
 
@@ -72,7 +72,7 @@ describe("run runtime-env", () => {
 
     expect(mockedCache.downloadTool).toHaveBeenCalledTimes(1);
     expect(mockedCache.extractTar).toHaveBeenCalledTimes(1);
-    expect(mockedCache.cacheFile).toHaveBeenCalledTimes(1);
+    expect(mockedCache.cacheDir).toHaveBeenCalledTimes(1);
 
     expect(mockedCore.addPath).toHaveBeenCalledWith("path");
 
@@ -93,7 +93,7 @@ describe("run runtime-env", () => {
 
     expect(mockedCache.downloadTool).toHaveBeenCalledTimes(0);
     expect(mockedCache.extractTar).toHaveBeenCalledTimes(0);
-    expect(mockedCache.cacheFile).toHaveBeenCalledTimes(0);
+    expect(mockedCache.cacheDir).toHaveBeenCalledTimes(0);
 
     expect(mockedCore.addPath).toHaveBeenCalledWith("path");
 
