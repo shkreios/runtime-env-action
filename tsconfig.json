@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "types": ["@types/jest", "@types/node"],
+    "moduleResolution": "node",
     "target": "es2019",
     "module": "commonjs",
     "outDir": "./lib",
@@ -7,5 +9,6 @@
     "strict": true,
     "noImplicitAny": true,
     "esModuleInterop": true
-  }
+  },
+  "exclude": ["dist", "node_modules"]
 }

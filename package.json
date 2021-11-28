@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc && npm run package",
     "package": "ncc build -m",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "test": "jest"
   },
   "author": "Simon Hessel",
   "license": "MIT",
@@ -29,6 +30,9 @@
     "binary-cli-install": "^1.0.2"
   },
   "devDependencies": {
+    "@types/jest": "^27.0.3",
+    "jest": "^27.3.1",
+    "ts-jest": "^27.0.7",
     "@types/node": "^16.11.7",
     "@vercel/ncc": "^0.31.1",
     "husky": "^7.0.4",
