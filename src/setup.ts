@@ -78,9 +78,8 @@ export async function setup() {
 
     exec(name, args);
   } catch (error) {
-    console.log(error);
     debug(`${error}`);
-    setFailed(error instanceof Error ? error.message : new Error(`${error}`));
+    setFailed(error instanceof Error ? error : new Error(`${error}`));
     process.exit(1);
   }
 }
