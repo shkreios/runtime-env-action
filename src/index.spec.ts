@@ -2,10 +2,7 @@ import core from "@actions/core";
 import exec from "@actions/exec";
 import cache from "@actions/tool-cache";
 import { setup } from "./setup";
-
-const mockedCore = core as jest.Mocked<typeof core>;
-const mockedExec = exec as jest.Mocked<typeof exec>;
-const mockedCache = cache as jest.Mocked<typeof cache>;
+import { mocked } from "ts-jest/utils";
 
 jest.mock("@actions/exec", () => ({
   exec: jest.fn(),
@@ -31,7 +28,7 @@ jest.spyOn(process, "exit").mockImplementation((code?: number): never => {
 });
 
 interface Input {
-  version: string;
+  version?: string;
   envFile?: string;
   prefix?: string;
   output?: string;
@@ -48,162 +45,208 @@ const isKey = <T extends object>(
 ): key is keyof T => key in obj;
 
 const createMockedgetInput =
-  (inputs: Input) =>
-  (key: string, options?: { required: boolean }): string => {
+  (inputs: Input): typeof core.getInput =>
+  (key, options) => {
     if (isKey(key, inputs)) {
       return inputs[key] || "";
     } else {
-      if (options?.required) throw `${key} was required but is not set.`;
+      if (options?.required)
+        throw new Error(`Input required and not supplied: ${key}`);
       return "";
     }
   };
 
+const mockgetInput = (inputs: Input) =>
+  mocked(core.getInput).mockImplementation(createMockedgetInput(inputs));
+
 describe("run runtime-env", () => {
-  it("should run without cache", async () => {
-    (<jest.Mock>core.getInput).mockImplementation(
-      createMockedgetInput({ version: "v1.2.0" })
-    );
+  describe("Running without cache", () => {
+    beforeEach(async () => {
+      mockgetInput({ version: "v1.2.0" });
+      mocked(cache.cacheDir).mockReturnValue(Promise.resolve("path"));
+      await setup();
+    });
 
-    (<jest.Mock>mockedCache.cacheDir).mockImplementation(() => "path");
+    it("should not fail", () =>
+      expect(core.setFailed).toHaveBeenCalledTimes(0));
 
-    await setup();
+    it("should download the cli", () => {
+      expect(cache.downloadTool).toHaveBeenCalledTimes(1);
+      expect(cache.extractTar).toHaveBeenCalledTimes(1);
+      expect(cache.cacheDir).toHaveBeenCalledTimes(1);
+    });
 
-    expect(mockedCore.setFailed).toHaveBeenCalledTimes(0);
+    it("should be added to path", () =>
+      expect(core.addPath).toHaveBeenCalledWith("path"));
 
-    expect(mockedCache.downloadTool).toHaveBeenCalledTimes(1);
-    expect(mockedCache.extractTar).toHaveBeenCalledTimes(1);
-    expect(mockedCache.cacheDir).toHaveBeenCalledTimes(1);
-
-    expect(mockedCore.addPath).toHaveBeenCalledWith("path");
-
-    expect(mockedExec.exec).toHaveBeenCalledTimes(1);
-    expect(mockedExec.exec).toHaveBeenCalledWith("runtime-env", []);
+    it("should run runtime-env with no args", () => {
+      expect(exec.exec).toHaveBeenCalledTimes(1);
+      expect(exec.exec).toHaveBeenCalledWith("runtime-env", []);
+    });
   });
 
-  it("should run with cache", async () => {
-    (<jest.Mock>core.getInput).mockImplementation(
-      createMockedgetInput({ version: "v1.2.0" })
-    );
+  describe("running with cache", () => {
+    beforeEach(async () => {
+      mockgetInput({ version: "v1.2.0" });
+      mocked(cache.find).mockReturnValue("path");
+      await setup();
+    });
 
-    (<jest.Mock>mockedCache.find).mockImplementation(() => "path");
+    it("should not fail", () =>
+      expect(core.setFailed).toHaveBeenCalledTimes(0));
 
-    await setup();
+    expect(cache.downloadTool).toHaveBeenCalledTimes(0);
+    expect(cache.extractTar).toHaveBeenCalledTimes(0);
+    expect(cache.cacheDir).toHaveBeenCalledTimes(0);
 
-    expect(mockedCore.setFailed).toHaveBeenCalledTimes(0);
+    it("should be added to path", () =>
+      expect(core.addPath).toHaveBeenCalledWith("path"));
 
-    expect(mockedCache.downloadTool).toHaveBeenCalledTimes(0);
-    expect(mockedCache.extractTar).toHaveBeenCalledTimes(0);
-    expect(mockedCache.cacheDir).toHaveBeenCalledTimes(0);
-
-    expect(mockedCore.addPath).toHaveBeenCalledWith("path");
-
-    expect(mockedExec.exec).toHaveBeenCalledTimes(1);
-    expect(mockedExec.exec).toHaveBeenCalledWith("runtime-env", []);
+    it("should run runtime-env with no args", () => {
+      expect(exec.exec).toHaveBeenCalledTimes(1);
+      expect(exec.exec).toHaveBeenCalledWith("runtime-env", []);
+    });
   });
 
-  it("should run with envfile", async () => {
-    (<jest.Mock>core.getInput).mockImplementation(
-      createMockedgetInput({ version: "v1.2.0", envFile: "./.env" })
-    );
+  describe("running without version", () => {
+    beforeEach(async () => {
+      mockgetInput({});
+      mocked(cache.find).mockReturnValue("path");
+      await setup();
+    });
 
-    await setup();
+    it("should  fail", () => {
+      expect(core.setFailed).toHaveBeenCalledTimes(1);
+      expect(core.setFailed).toHaveBeenCalledWith(
+        new Error(`Input required and not supplied: version`)
+      );
+    });
 
-    expect(mockedCore.setFailed).toHaveBeenCalledTimes(0);
-    expect(mockedExec.exec).toHaveBeenCalledTimes(1);
-    expect(mockedExec.exec).toHaveBeenCalledWith("runtime-env", ["-f=./.env"]);
+    it("Action should exit with 1", () =>
+      expect(process.exit).toHaveBeenCalledTimes(1));
   });
 
-  it("should run with envfile", async () => {
-    (<jest.Mock>core.getInput).mockImplementation(
-      createMockedgetInput({ version: "v1.2.0", globalKey: "TEST" })
-    );
+  describe("running with envfile set", () => {
+    beforeEach(async () => {
+      mockgetInput({ version: "v1.2.0", envFile: "./.env" });
+      await setup();
+    });
 
-    await setup();
-
-    expect(mockedCore.setFailed).toHaveBeenCalledTimes(0);
-    expect(mockedExec.exec).toHaveBeenCalledTimes(1);
-    expect(mockedExec.exec).toHaveBeenCalledWith("runtime-env", ["--key=TEST"]);
+    it("should not fail", () =>
+      expect(core.setFailed).toHaveBeenCalledTimes(0));
+    it("should run runtime-env with args --env-file set to ../env", () => {
+      expect(exec.exec).toHaveBeenCalledTimes(1);
+      expect(exec.exec).toHaveBeenCalledWith("runtime-env", ["-f=./.env"]);
+    });
   });
 
-  it("should run with envfile", async () => {
-    (<jest.Mock>core.getInput).mockImplementation(
-      createMockedgetInput({ version: "v1.2.0", noEnvs: "true" })
-    );
+  describe("run with gloablKey set", () => {
+    beforeEach(async () => {
+      mockgetInput({ version: "v1.2.0", globalKey: "TEST" });
+      await setup();
+    });
 
-    await setup();
-
-    expect(mockedCore.setFailed).toHaveBeenCalledTimes(0);
-    expect(mockedExec.exec).toHaveBeenCalledTimes(1);
-    expect(mockedExec.exec).toHaveBeenCalledWith("runtime-env", [
-      "--no-envs=true",
-    ]);
+    it("should not fail", () =>
+      expect(core.setFailed).toHaveBeenCalledTimes(0));
+    it("should run runtime-env with args --key set to TEST", () => {
+      expect(exec.exec).toHaveBeenCalledTimes(1);
+      expect(exec.exec).toHaveBeenCalledWith("runtime-env", ["--key=TEST"]);
+    });
   });
-  it("should run with envfile", async () => {
-    (<jest.Mock>core.getInput).mockImplementation(
-      createMockedgetInput({ version: "v1.2.0", output: "./build/env.js" })
-    );
 
-    await setup();
+  describe("runing with noEnvs set", () => {
+    beforeEach(async () => {
+      mockgetInput({ version: "v1.2.0", noEnvs: "true" });
+      await setup();
+    });
 
-    expect(mockedCore.setFailed).toHaveBeenCalledTimes(0);
-    expect(mockedExec.exec).toHaveBeenCalledTimes(1);
-    expect(mockedExec.exec).toHaveBeenCalledWith("runtime-env", [
-      "-o=./build/env.js",
-    ]);
+    it("should not fail", () =>
+      expect(core.setFailed).toHaveBeenCalledTimes(0));
+
+    it("should run runtime-env with args --no-envs set to true", () => {
+      expect(exec.exec).toHaveBeenCalledTimes(1);
+      expect(exec.exec).toHaveBeenCalledWith("runtime-env", ["--no-envs=true"]);
+    });
   });
-  it("should run with envfile", async () => {
-    (<jest.Mock>core.getInput).mockImplementation(
-      createMockedgetInput({ version: "v1.2.0", prefix: "REACT_APP_" })
-    );
+  describe("running with output set", () => {
+    beforeEach(async () => {
+      mockgetInput({ version: "v1.2.0", output: "./build/env.js" });
+      await setup();
+    });
 
-    await setup();
+    it("should not fail", () =>
+      expect(core.setFailed).toHaveBeenCalledTimes(0));
 
-    expect(mockedCore.setFailed).toHaveBeenCalledTimes(0);
-    expect(mockedExec.exec).toHaveBeenCalledTimes(1);
-    expect(mockedExec.exec).toHaveBeenCalledWith("runtime-env", [
-      "-p=REACT_APP_",
-    ]);
+    it("should run runtime-env with args --output set to ./build/env.js", () => {
+      expect(exec.exec).toHaveBeenCalledTimes(1);
+      expect(exec.exec).toHaveBeenCalledWith("runtime-env", [
+        "-o=./build/env.js",
+      ]);
+    });
   });
-  it("should run with envfile", async () => {
-    (<jest.Mock>core.getInput).mockImplementation(
-      createMockedgetInput({ version: "v1.2.0", removePrefix: "true" })
-    );
+  describe("running with prefix set", () => {
+    beforeEach(async () => {
+      mockgetInput({ version: "v1.2.0", prefix: "REACT_APP_" });
+      await setup();
+    });
 
-    await setup();
+    it("should not fail", () =>
+      expect(core.setFailed).toHaveBeenCalledTimes(0));
 
-    expect(mockedCore.setFailed).toHaveBeenCalledTimes(0);
-    expect(mockedExec.exec).toHaveBeenCalledTimes(1);
-    expect(mockedExec.exec).toHaveBeenCalledWith("runtime-env", [
-      "--remove-prefix=true",
-    ]);
+    it("should run runtime-env with args --prefix set to REACT_APP_", () => {
+      expect(exec.exec).toHaveBeenCalledTimes(1);
+      expect(exec.exec).toHaveBeenCalledWith("runtime-env", ["-p=REACT_APP_"]);
+    });
   });
-  it("should run with envfile", async () => {
-    (<jest.Mock>core.getInput).mockImplementation(
-      createMockedgetInput({
+  describe("running with remove prefix set", () => {
+    beforeEach(async () => {
+      mockgetInput({ version: "v1.2.0", removePrefix: "true" });
+      await setup();
+    });
+
+    it("should not fail", () =>
+      expect(core.setFailed).toHaveBeenCalledTimes(0));
+
+    it("should run runtime-env with args --remove-prefix set to true", () => {
+      expect(exec.exec).toHaveBeenCalledTimes(1);
+      expect(exec.exec).toHaveBeenCalledWith("runtime-env", [
+        "--remove-prefix=true",
+      ]);
+    });
+  });
+  describe("running with dts set", () => {
+    beforeEach(async () => {
+      mockgetInput({
         version: "v1.2.0",
         typeDeclarationsFile: "./types/env.d.ts",
-      })
-    );
+      });
+      await setup();
+    });
 
-    await setup();
+    it("should not fail", () =>
+      expect(core.setFailed).toHaveBeenCalledTimes(0));
 
-    expect(mockedCore.setFailed).toHaveBeenCalledTimes(0);
-    expect(mockedExec.exec).toHaveBeenCalledTimes(1);
-    expect(mockedExec.exec).toHaveBeenCalledWith("runtime-env", [
-      "--dts=./types/env.d.ts",
-    ]);
+    it("should run runtime-env with args --dts set to ./types/env.d.t", () => {
+      expect(exec.exec).toHaveBeenCalledTimes(1);
+      expect(exec.exec).toHaveBeenCalledWith("runtime-env", [
+        "--dts=./types/env.d.ts",
+      ]);
+    });
   });
-  it("should run with envfile", async () => {
-    (<jest.Mock>core.getInput).mockImplementation(
-      createMockedgetInput({ version: "v1.2.0", disableLogs: "true" })
-    );
+  describe("running run disablelogs set", () => {
+    beforeEach(async () => {
+      mockgetInput({ version: "v1.2.0", disableLogs: "true" });
+      await setup();
+    });
 
-    await setup();
+    it("should not fail", () =>
+      expect(core.setFailed).toHaveBeenCalledTimes(0));
 
-    expect(mockedCore.setFailed).toHaveBeenCalledTimes(0);
-    expect(mockedExec.exec).toHaveBeenCalledTimes(1);
-    expect(mockedExec.exec).toHaveBeenCalledWith("runtime-env", [
-      "--disable-logs=true",
-    ]);
+    it("should run runtime-env with args --disable-logs set to true", () => {
+      expect(exec.exec).toHaveBeenCalledTimes(1);
+      expect(exec.exec).toHaveBeenCalledWith("runtime-env", [
+        "--disable-logs=true",
+      ]);
+    });
   });
 });
