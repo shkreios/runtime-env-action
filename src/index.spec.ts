@@ -2,7 +2,7 @@ import core from "@actions/core";
 import exec from "@actions/exec";
 import cache from "@actions/tool-cache";
 import { setup } from "./setup";
-import { mocked } from "ts-jest/utils";
+import { mocked } from "jest-mock";
 
 jest.mock("@actions/exec", () => ({
   exec: jest.fn(),

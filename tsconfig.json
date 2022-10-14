@@ -8,6 +8,7 @@
     "rootDir": "./src",
     "strict": true,
     "noImplicitAny": true,
+    "skipLibCheck": true,
     "esModuleInterop": true
   },
   "exclude": ["dist", "node_modules"]
