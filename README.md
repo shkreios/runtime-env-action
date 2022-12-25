@@ -68,6 +68,7 @@ jobs:
 | -------------------- | ---------------------------------------------------------------- | -------- | ------- | -------- |
 | version              | The version of runtime-env you want to use                       | Yes      | vx.x.x  | N/A      |
 | envFile              | The .env file to be parsed                                       | No       | path    | N/A      |
+| schemaFile           | A .env file with a list of envs to be parsed                     | No       | path    | N/A      |
 | prefix               | The env prefix to matched                                        | No       | string  | N/A      |
 | output               | Output file path                                                 | No       | path    | ./env.js |
 | typeDeclarationsFile | Output file path for the typescript declaration file             | No       | path    | N/A      |

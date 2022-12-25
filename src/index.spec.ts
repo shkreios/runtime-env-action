@@ -30,6 +30,7 @@ jest.spyOn(process, "exit").mockImplementation((code?: number): never => {
 interface Input {
   version?: string;
   envFile?: string;
+  schemaFile?: string;
   prefix?: string;
   output?: string;
   typeDeclarationsFile?: string;
@@ -247,6 +248,21 @@ describe("run runtime-env", () => {
       expect(exec.exec).toHaveBeenCalledWith("runtime-env", [
         "--disable-logs=true",
       ]);
+    });
+  });
+
+  describe("running with schemaFile set", () => {
+    beforeEach(async () => {
+      mockgetInput({ version: "v1.2.0", schemaFile: "schema.env" });
+      await setup();
+    });
+
+    it("should not fail", () =>
+      expect(core.setFailed).toHaveBeenCalledTimes(0));
+
+    it("should run runtime-env with args -s set to schema.env", () => {
+      expect(exec.exec).toHaveBeenCalledTimes(1);
+      expect(exec.exec).toHaveBeenCalledWith("runtime-env", ["-s=schema.env"]);
     });
   });
 });

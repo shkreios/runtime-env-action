@@ -14,6 +14,9 @@ inputs:
   envFile:
     description: The .env file to be parsed
     required: false
+  schemaFile:
+    description: A .env file with a list of envs to be parsed
+    required: false
   prefix:
     description: "The env prefix to matched"
     required: false

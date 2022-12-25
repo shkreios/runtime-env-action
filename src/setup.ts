@@ -51,9 +51,10 @@ export async function setup() {
     // Expose the tool by adding it to the PATH
     addPath(pathToCLI);
 
-    const mapper: Record<string, (value: string) => string> = {
+    const mapper = {
       envFile: (value) => `-f=${value}`,
       prefix: (value) => `-p=${value}`,
+      schemaFile: (value) => `-s=${value}`,
       output: (value) => `-o=${value}`,
       typeDeclarationsFile: (value) => `--dts=${value}`,
       globalKey: (value) => `--key=${value}`,
@@ -63,7 +64,7 @@ export async function setup() {
         value.toLowerCase() === "true" ? "--no-envs=true" : "",
       disableLogs: (value) =>
         value.toLowerCase() === "true" ? "--disable-logs=true" : "",
-    };
+    } satisfies Record<string, (value: string) => string>;
 
     const args = Object.entries(mapper).reduce((acc, [key, fn]) => {
       const value = getInput(key);
